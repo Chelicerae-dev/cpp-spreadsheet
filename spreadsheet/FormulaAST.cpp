@@ -72,7 +72,7 @@ public:
     virtual ~Expr() = default;
     virtual void Print(std::ostream& out) const = 0;
     virtual void DoPrintFormula(std::ostream& out, ExprPrecedence precedence) const = 0;
-    virtual double Evaluate(/*добавьте сюда нужные аргументы*/ args) const = 0;
+    virtual double Evaluate(const GetFunc& getter) const = 0;
 
     // higher is tighter
     virtual ExprPrecedence GetPrecedence() const = 0;
@@ -142,8 +142,37 @@ public:
         }
     }
 
-    double Evaluate(/*добавьте нужные аргументы*/) const override {
-			// Скопируйте ваше решение из предыдущих уроков.
+    double Evaluate(const GetFunc& getter) const override {
+//        double result = 0.;
+        auto finite_check = [](double result) {
+            if (!std::isfinite(result)) {
+                throw FormulaError(FormulaError::Category::Div0);
+            }
+            return result;
+        };
+        switch(type_) {
+            case Add:
+                return finite_check(lhs_->Evaluate(getter) + rhs_->Evaluate(getter));
+            case Subtract:
+                return finite_check(lhs_->Evaluate(getter) - rhs_->Evaluate(getter));
+            case Multiply:
+                return finite_check(lhs_->Evaluate(getter) * rhs_->Evaluate(getter));
+//                return lhs_->Evaluate(getter) * rhs_->Evaluate(getter);
+            case Divide:
+                return finite_check(lhs_->Evaluate(getter) / rhs_->Evaluate(getter));
+//                if(std::isfinite(lhs_->Evaluate(getter) / rhs_->Evaluate(getter))) {
+//                    return lhs_->Evaluate(getter) / rhs_->Evaluate(getter);
+//                } else {
+//                    throw FormulaError(FormulaError::Category::Div0);
+//                }
+            default:
+                throw std::logic_error("Invalid formula data");
+        }
+//        if(std::isfinite(result)) {
+//            return result;
+//        } else {
+//            throw FormulaError(FormulaError::Category::Div0);
+//        }
     }
 
 private:
@@ -180,8 +209,15 @@ public:
         return EP_UNARY;
     }
 
-    double Evaluate(/*добавьте нужные аргументы*/ args) const override {
-        // Скопируйте ваше решение из предыдущих уроков.
+    double Evaluate(const GetFunc& getter) const override {
+        switch(type_) {
+            case UnaryPlus:
+                return operand_->Evaluate(getter);
+            case UnaryMinus:
+                return operand_->Evaluate(getter) * -1;
+            default:
+                throw std::logic_error("Invalid formula data");
+        }
     }
 
 private:
@@ -211,8 +247,8 @@ public:
         return EP_ATOM;
     }
 
-    double Evaluate(/*добавьте нужные аргументы*/ args) const override {
-        // реализуйте метод.
+    double Evaluate(const GetFunc& getter) const override {
+        return getter(*cell_);
     }
 
 private:
@@ -237,7 +273,7 @@ public:
         return EP_ATOM;
     }
 
-    double Evaluate(/*добавьте нужные аргументы*/ args) const override {
+    double Evaluate(const GetFunc&) const override {
         return value_;
     }
 
@@ -391,8 +427,8 @@ void FormulaAST::PrintFormula(std::ostream& out) const {
     root_expr_->PrintFormula(out, ASTImpl::EP_ATOM);
 }
 
-double FormulaAST::Execute(/*добавьте нужные аргументы*/ args) const {
-    return root_expr_->Evaluate(/*добавьте нужные аргументы*/ args);
+double FormulaAST::Execute(const GetFunc& getter) const {
+    return root_expr_->Evaluate(getter);
 }
 
 FormulaAST::FormulaAST(std::unique_ptr<ASTImpl::Expr> root_expr, std::forward_list<Position> cells)
