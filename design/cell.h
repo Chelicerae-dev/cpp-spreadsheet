@@ -28,9 +28,10 @@ public:
 
     bool IsReferenced() const;
 
-    void InvalidateAscendingCaches(std::unordered_set<const Cell*>& visited);
+    void InvalidateAscendingCaches(std::unordered_set<Cell*>& visited);
     //хелпер для получения доступа к FormulaImpl в случае, если impl_ является его экземпляром
-    FormulaImpl* GetFormulaImpl() const;
+    FormulaImpl* GetFormulaImpl(Cell* cell) const;
+    FormulaImpl* GetFormula(Impl* impl) const;
 
 
 private:
@@ -41,18 +42,18 @@ private:
     //Храним в Cell, а не FormulaImpl так как FormulaImpl может измениться на другой тип и потерять зависимости
     //делаем mutable для доступа из других ячеек (для заполнения ascending)
     //через неё мы сможем инвалидировать кеш, удалять нужые зависимости при изменении и пересчитывать кеш
-    mutable std::unordered_set<const Cell*> ascending_;
-    mutable std::unordered_set<const Cell*> descending_;
+    mutable std::unordered_set<Cell*> ascending_;
+    mutable std::unordered_set<Cell*> descending_;
 
     //Set() helpers
-    std::unique_ptr<Value> CreateTempCell(const std::string& text);
-    void InitializeNewCell(const Value& value);
+    std::unique_ptr<Impl> CreateTempCell(const std::string& text, SheetInterface& sheet);
+    void InitializeNewCells(const std::vector<Position>& positions);
     //target - это this, в аргументах нужна для передачи её рекурсивно далее
-    bool HasCyclic(const Cell* target, const Cell* current, std::unordered_set<const Cell*>& visited) const;
+    bool HasCyclic(const Cell* target, Impl* current, std::unordered_set<Cell*>& visited) const;
     //очищаем список ячеек, от которых зависим если значение более не формула
     void ClearDescending();
     //переопределяем список ячеек, от которых зависим в случае новой формулы
-    void ResetDescending(FormulaImpl* formula);
+    void ResetDescending(const FormulaImpl* formula);
 
     // Добавьте поля и методы для связи с таблицей, проверки циклических 
     // зависимостей, графа зависимостей и т. д.
