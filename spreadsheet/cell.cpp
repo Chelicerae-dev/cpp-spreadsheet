@@ -5,8 +5,6 @@
 #include <string>
 #include <optional>
 
-
-// Реализуйте следующие методы
 class Cell::Impl {
 public:
     using Value = CellInterface::Value;
@@ -134,6 +132,7 @@ void Cell::Set(std::string text) {
 }
 
 void Cell::Clear() {
+    //Использование ClearDescending позволяет избежать лишнего создания временного объекта
     ClearDescending();
     std::unordered_set<Cell*> visited{this};
     InvalidateAscendingCaches(visited);
@@ -141,9 +140,9 @@ void Cell::Clear() {
 }
 
 std::vector<Position> Cell::GetReferencedCells() const {
-    //СДЕЛАТЬ
-    //std::vector<Position> result;
-    if(impl_ == nullptr || impl_->GetType() != Impl::CellType::FORMULA) return std::vector<Position>();
+    if(impl_ == nullptr || impl_->GetType() != Impl::CellType::FORMULA) {
+        return std::vector<Position>();
+    }
     return GetFormula(impl_.get())->GetReferences();
 }
 
@@ -155,7 +154,9 @@ std::string Cell::GetText() const {
 }
 
 void Cell::InvalidateAscendingCaches(std::unordered_set<Cell*>& visited) {
-    if(impl_->GetType() == Impl::CellType::FORMULA) GetFormula(impl_.get())->InvalidateCache();
+    if(impl_->GetType() == Impl::CellType::FORMULA) {
+        GetFormula(impl_.get())->InvalidateCache();
+    }
     for(Cell* cell : ascending_) {
         if(visited.count(cell) == 0) {
             visited.insert(cell);
@@ -169,7 +170,7 @@ void Cell::InvalidateAscendingCaches(std::unordered_set<Cell*>& visited) {
 std::unique_ptr<Cell::Impl> Cell::CreateTempCell(const std::string& text, SheetInterface& sheet) {
     Cell result(sheet);
     if(text.size() > 0) {
-        if(text[0] == '=' && text.size() > 1) {
+        if(text[0] == FORMULA_SIGN && text.size() > 1) {
             try {
                 return std::make_unique<FormulaImpl>(text.substr(1), sheet_);
             } catch(const std::exception& ex) {

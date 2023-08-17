@@ -11,6 +11,7 @@
 
 using namespace std::literals;
 
+
 Sheet::~Sheet() {}
 
 void Sheet::SetCell(Position pos, std::string text) {
@@ -38,8 +39,6 @@ CellInterface* Sheet::GetCell(Position pos) {
 
 void Sheet::ClearCell(Position pos) {
     IsValidPosition(pos);
-//    if(pos.row > size_.rows || pos.col > size_.cols) SetCell(pos, "");
-//    if()
     Cell* cell = dynamic_cast<Cell*>(GetCell(pos));
     if(cell == nullptr ) return;
     cell->Clear();
@@ -60,31 +59,17 @@ Size Sheet::GetPrintableSize() const {
 }
 
 void Sheet::PrintValues(std::ostream& output) const {
-//    bool first = true;
     Size size = GetPrintableSize();
-//    for(const std::vector<std::unique_ptr<Cell>>& row : data_) {
     for(int i = 0; i < size.rows; ++i) {
-//        if(first) {
-//            first = false;
             PrintRow(output, i, size.cols, PrintType::VALUES);
-//        } else {
             output << '\n';
-//            PrintRow(output, i, size.cols, PrintType::VALUES);
-//        }
     }
 }
 void Sheet::PrintTexts(std::ostream& output) const {
-//    bool first = true;
     Size size = GetPrintableSize();
-//    for(const std::vector<std::unique_ptr<Cell>>& row : data_) {
     for(int i = 0; i < size.rows; ++i) {
-//        if(first) {
-//            first = false;
             PrintRow(output, i, size.cols, PrintType::TEXT);
-//        } else {
             output << '\n';
-//            PrintRow(output, i, size.cols, PrintType::TEXT);
-//        }
     }
 }
 
@@ -99,7 +84,6 @@ void Sheet::PrintRow(std::ostream& os,
 {
     using namespace std::string_literals;
     bool first = true;
-//    for(const std::unique_ptr<Cell>& cell : row) {
     for(int i = 0; i < len; ++i) {
         std::stringstream val;
         const CellInterface* cell = GetCell({row, i});
