@@ -30,8 +30,7 @@ private:
 
 std::unique_ptr<FormulaInterface> ParseFormula(std::string expression) {
     try {
-        auto result = std::make_unique<Formula>(std::move(expression));
-        return std::move(result);
+        return std::make_unique<Formula>(std::move(expression));
     } catch (const std::exception& ex) {
         throw FormulaException(ex.what());
     }
@@ -62,13 +61,11 @@ Formula::Value Formula::Evaluate(const SheetInterface& sheet) const {
                 std::regex double_reg("^(-?)(0|([1-9][0-9]*))(\\.[0-9]+)?$");
                 std::smatch match_result;
                 try {
-                if(std::regex_match(std::get<std::string>(result).cbegin(), std::get<std::string>(result).cend(), match_result, double_reg)) {
-                    return std::stod(std::get<std::string>(result));
-                } else {
-                    throw std::invalid_argument("");
-                }
-//                try {
-//                    return std::stod(std::get<std::string>(result));
+                    if(std::regex_match(std::get<std::string>(result).cbegin(), std::get<std::string>(result).cend(), match_result, double_reg)) {
+                        return std::stod(std::get<std::string>(result));
+                    } else {
+                        throw std::invalid_argument("");
+                    }
                 } catch(...) {
                     throw FormulaError(FormulaError::Category::Value);
                 }

@@ -62,6 +62,7 @@ public:
             case Category::Div0:
                 return "#DIV/0!"sv;
         }
+        return ""sv;
     }
 
 private:
